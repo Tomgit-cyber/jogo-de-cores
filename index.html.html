@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Jogo de Cores (Web)</title>
+<style>
+  body {
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #game-container {
+    display: grid;
+    grid-template-columns: repeat(3, 80px);
+    grid-gap: 10px;
+    margin-top: 20px;
+  }
+  .square {
+    width: 80px;
+    height: 80px;
+    border: 1px solid #ccc;
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5em;
+    cursor: pointer;
+  }
+  #message {
+    margin-top: 20px;
+    font-weight: bold;
+  }
+  button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+  <h1>Jogo de Cores</h1>
+  <div id="game-container">
+    </div>
+  <div id="message"></div>
+  <button id="reset-button">Reset</button>
+
+  <script>
+    const gameContainer = document.getElementById('game-container');
+    const messageElement = document.getElementById('message');
+    const resetButton = document.getElementById('reset-button');
+    let squares = [];
+    let coresJogo = [];
+    let primeiraEscolha = null;
+    let segundaEscolha = null;
+    let podeClicar = true;
+    const numCores = 3;
+    const numPares = 2;
+
+    function criarTabuleiro() {
+      coresJogo = gerarCores(numCores, numPares);
+      gameContainer.innerHTML = '';
+      squares = [];
+      primeiraEscolha = null;
+      segundaEscolha = null;
+      podeClicar = true;
+      messageElement.textContent = '';
+
+      for (let i = 0; i < numCores * numPares; i++) {
+        const square = document.createElement('div');
+        square.classList.add('square');
+        square.dataset.index = i;
+        square.addEventListener('click', lidarClique);
+        gameContainer.appendChild(square);
+        squares.push(square);
+      }
+    }
+
+    function gerarCores(num, pares) {
+      const cores = [];
+      const listaCores = ['red', 'blue', 'green', 'yellow', 'purple', 'orange']; // Mais opções de cores
+      for (let i = 0; i < num; i++) {
+        const cor = listaCores[i];
+        for (let j = 0; j < pares; j++) {
+          cores.push(cor);
+        }
+      }
+      cores.sort(() => Math.random() - 0.5); // Embaralhar cores
+      return cores;
+    }
+
+    function lidarClique() {
+      if (!podeClicar) return;
+
+      const indice = parseInt(this.dataset.index);
+      const cor = coresJogo[indice];
+
+      if (this === primeiraEscolha || this.dataset.clicado) return;
+
+      this.style.backgroundColor = cor;
+      this.dataset.clicado = true;
+
+      if (!primeiraEscolha) {
+        primeiraEscolha = this;
+      } else if (!segundaEscolha) {
+        segundaEscolha = this;
+        podeClicar = false;
+        setTimeout(verificarPar, 1000);
+      }
+    }
+
+    function verificarPar() {
+      if (primeiraEscolha.style.backgroundColor === segundaEscolha.style.backgroundColor) {
+        primeiraEscolha.dataset.encontrado = true;
+        segundaEscolha.dataset.encontrado = true;
+        primeiraEscolha.removeEventListener('click', lidarClique);
+        segundaEscolha.removeEventListener('click', lidarClique);
+        primeiraEscolha = null;
+        segundaEscolha = null;
+        verificarFimJogo();
+      } else {
+        primeiraEscolha.style.backgroundColor = 'white';
+        segundaEscolha.style.backgroundColor = 'white';
+        delete primeiraEscolha.dataset.clicado;
+        delete segundaEscolha.dataset.clicado;
+        primeiraEscolha = null;
+        segundaEscolha = null;
+      }
+      podeClicar = true;
+    }
+
+    function verificarFimJogo() {
+      const paresEncontrados = document.querySelectorAll('.square[data-encontrado="true"]').length / 2;
+      if (paresEncontrados === numCores) {
+        messageElement.textContent = 'Parabéns! Você completou o desafio!';
+      }
+    }
+
+    function resetJogo() {
+      criarTabuleiro();
+    }
+
+    resetButton.addEventListener('click', resetJogo);
+
+    criarTabuleiro(); // Iniciar o jogo ao carregar a página
+  </script>
+</body>
+</html>
